@@ -12,18 +12,18 @@ interface CtrlCommand<TAggregate : CtrlAggregate<TAggregate>> {
 
     fun getEvent(eventLegend: EventLegend<TAggregate>): CtrlEvent<TAggregate>
 
-    fun validate(aggregate: TAggregate, validation: PlayValidation)
+    fun validate(aggregate: TAggregate, validation: CtrlValidation)
 
-    fun executeOn(aggregate: TAggregate): PlayExecution<TAggregate, CtrlEvent<TAggregate>, PlayInvalidation<TAggregate>> {
-        val validation = PlayValidation(mutableListOf())
+    fun executeOn(aggregate: TAggregate): CtrlExecution<TAggregate, CtrlEvent<TAggregate>, CtrlInvalidation> {
+        val validation = CtrlValidation(mutableListOf())
 
         validate(aggregate, validation)
 
         val validatedItems = validation.invalidInputItems.toTypedArray()
 
-        return if (validatedItems.isNotEmpty()) PlayExecution.Invalidated(items = validatedItems)
+        return if (validatedItems.isNotEmpty()) CtrlExecution.Invalidated(items = validatedItems)
         else {
-            PlayExecution.Validated(
+            CtrlExecution.Validated(
                     event = getEvent(
                             getEventLegend(aggregateId = aggregate.legend.aggregateId, version = aggregate.legend.latestVersion + 1)
                     )
@@ -32,25 +32,24 @@ interface CtrlCommand<TAggregate : CtrlAggregate<TAggregate>> {
     }
 }
 
-sealed class PlayExecution<TAggregate : CtrlAggregate<TAggregate>, out TEvent : CtrlEvent<TAggregate>, out TInvalid: PlayInvalidation<TAggregate>>{
+sealed class CtrlExecution<TAggregate : CtrlAggregate<TAggregate>, out TEvent : CtrlEvent<TAggregate>, out TInvalid: CtrlInvalidation>{
     class Validated<TAggregate : CtrlAggregate<TAggregate>, out TEvent : CtrlEvent<TAggregate>>(
             val event: CtrlEvent<TAggregate>
-    ) : PlayExecution<TAggregate, TEvent, Nothing>()
+    ) : CtrlExecution<TAggregate, TEvent, Nothing>()
 
     class Invalidated<TAggregate : CtrlAggregate<TAggregate>>(
-            val items: Array<PlayInvalidInput>
-    ) : PlayExecution<TAggregate, Nothing, PlayInvalidation<TAggregate>>()
+            val items: Array<CtrlInvalidInput>
+    ) : CtrlExecution<TAggregate, Nothing, CtrlInvalidation>()
 }
 
-class PlayInvalidation<TAggregate>(items: Array<PlayInvalidInput>)
+class CtrlInvalidation(val items: Array<CtrlInvalidInput>)
 
-class PlayValidation(internal val invalidInputItems: MutableList<PlayInvalidInput>){
-    fun assert(that: () -> Boolean, description: String){
-
+class CtrlValidation(internal val invalidInputItems: MutableList<CtrlInvalidInput>){
+    fun assert(that: () -> Boolean, description: String) {
         when {
-            !that() -> invalidInputItems.add(PlayInvalidInput(description = description))
+            !that() -> invalidInputItems.add(CtrlInvalidInput(description = description))
         }
     }
 }
 
-class PlayInvalidInput(val description: String)
+class CtrlInvalidInput(val description: String)
