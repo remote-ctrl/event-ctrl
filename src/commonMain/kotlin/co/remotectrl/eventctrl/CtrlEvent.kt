@@ -11,11 +11,11 @@ interface CtrlEvent<TAggregate : CtrlAggregate<TAggregate>> {
     }
 }
 
-class MutableAggregate<TAggregate : CtrlAggregate<TAggregate>>(var aggregate: TAggregate)
+data class MutableAggregate<TAggregate : CtrlAggregate<TAggregate>>(var aggregate: TAggregate)
 
-class EventId<TAggregate>(val value: String) where TAggregate : CtrlAggregate<TAggregate>
+data class EventId<TAggregate>(val value: String) where TAggregate : CtrlAggregate<TAggregate>
 
-class EventLegend<TAggregate : CtrlAggregate<TAggregate>>(
+data class EventLegend<TAggregate : CtrlAggregate<TAggregate>>(
     val eventId: EventId<TAggregate>,
     val aggregateId: AggregateId<TAggregate>,
     val version: Int

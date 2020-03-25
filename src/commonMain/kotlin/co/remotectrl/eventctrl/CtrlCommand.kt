@@ -38,18 +38,48 @@ sealed class CtrlExecution<
         out TEvent : CtrlEvent<TAggregate>,
         out TInvalid : CtrlInvalidation
         > {
-    class Validated<TAggregate : CtrlAggregate<TAggregate>, out TEvent : CtrlEvent<TAggregate>>(
+    data class Validated<TAggregate : CtrlAggregate<TAggregate>, out TEvent : CtrlEvent<TAggregate>>(
         val event: CtrlEvent<TAggregate>
     ) : CtrlExecution<TAggregate, TEvent, Nothing>()
 
-    class Invalidated<TAggregate : CtrlAggregate<TAggregate>>(
+    data class Invalidated<TAggregate : CtrlAggregate<TAggregate>>(
         val items: Array<CtrlInvalidInput>
-    ) : CtrlExecution<TAggregate, Nothing, CtrlInvalidation>()
+    ) : CtrlExecution<TAggregate, Nothing, CtrlInvalidation>() {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other == null || this::class != other::class) return false
+
+            other as Invalidated<*>
+
+            if (!items.contentEquals(other.items)) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            return items.contentHashCode()
+        }
+    }
 }
 
-class CtrlInvalidation(val items: Array<CtrlInvalidInput>)
+data class CtrlInvalidation(val items: Array<CtrlInvalidInput>) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
 
-class CtrlValidation(internal val invalidInputItems: MutableList<CtrlInvalidInput>) {
+        other as CtrlInvalidation
+
+        if (!items.contentEquals(other.items)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return items.contentHashCode()
+    }
+}
+
+data class CtrlValidation(internal val invalidInputItems: MutableList<CtrlInvalidInput>) {
     fun assert(that: () -> Boolean, description: String) {
         when {
             !that() -> invalidInputItems.add(CtrlInvalidInput(description = description))
@@ -57,4 +87,4 @@ class CtrlValidation(internal val invalidInputItems: MutableList<CtrlInvalidInpu
     }
 }
 
-class CtrlInvalidInput(val description: String)
+data class CtrlInvalidInput(val description: String)
